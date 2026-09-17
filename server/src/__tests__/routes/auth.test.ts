@@ -35,11 +35,11 @@ describe('Dashboard auth (#35)', () => {
     expect(body).toMatchObject({ needsSetup: true, authenticated: false });
   });
 
-  it('gates /api/* routes with 401 when unauthenticated', async () => {
-    expect((await call(app, 'GET', '/api/keys')).status).toBe(401);
-    expect((await call(app, 'GET', '/api/fallback')).status).toBe(401);
-    expect((await call(app, 'GET', '/api/settings/api-key')).status).toBe(401);
-    expect((await call(app, 'GET', '/api/update/status')).status).toBe(401);
+  it('serves /api/* routes without a session (dashboard auth removed)', async () => {
+    expect((await call(app, 'GET', '/api/keys')).status).toBe(200);
+    expect((await call(app, 'GET', '/api/fallback')).status).toBe(200);
+    expect((await call(app, 'GET', '/api/settings/api-key')).status).toBe(200);
+    expect((await call(app, 'GET', '/api/update/status')).status).toBe(200);
   });
 
   it('leaves /api/ping and the /v1 proxy reachable without a dashboard session', async () => {
@@ -84,12 +84,13 @@ describe('Dashboard auth (#35)', () => {
     expect(body).toMatchObject({ needsSetup: false, authenticated: true, email: 'admin@example.com' });
   });
 
-  it('invalidates the token on logout', async () => {
+  it('logs out; the dashboard stays accessible (auth removed)', async () => {
     const login = await call(app, 'POST', '/api/auth/login', { email: 'admin@example.com', password: 'supersecret' });
     const t = login.body.token;
     expect((await call(app, 'GET', '/api/keys', undefined, t)).status).toBe(200);
-    await call(app, 'POST', '/api/auth/logout', {}, t);
-    expect((await call(app, 'GET', '/api/keys', undefined, t)).status).toBe(401);
+    expect((await call(app, 'POST', '/api/auth/logout', {}, t)).status).toBe(200);
+    // The session is deleted server-side, but the dashboard no longer requires one.
+    expect((await call(app, 'GET', '/api/keys', undefined, t)).status).toBe(200);
   });
 
   it('locks out after repeated failed attempts (separate email, no real account)', async () => {

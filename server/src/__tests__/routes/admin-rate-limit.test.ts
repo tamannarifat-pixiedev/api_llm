@@ -47,10 +47,10 @@ describe('Admin API rate limiter', () => {
     expect(headers.get('x-ratelimit-limit')).toBe('600');
   });
 
-  it('counts unauthenticated requests against the admin rate limit window', async () => {
-    const { status } = await request(app, '/api/keys');
-    // Unauthenticated still hits the rate limiter, then fails at requireAuth
-    expect(status).toBe(401);
+  it('admits unauthenticated requests past the admin rate limiter (auth removed)', async () => {
+    const { status, headers } = await request(app, '/api/keys');
+    expect(status).toBe(200);
+    expect(headers.get('x-ratelimit-limit')).toBe('600');
   });
 
   it('caps the broad admin surface well above normal dashboard traffic', async () => {

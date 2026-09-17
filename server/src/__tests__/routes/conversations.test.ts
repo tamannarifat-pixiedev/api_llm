@@ -235,25 +235,25 @@ describe('playground conversations', () => {
   });
 
   describe('auth', () => {
-    it('requires a dashboard session on every method', async () => {
+    // Dashboard auth was removed: /api/* treats every caller as the local
+    // operator, so no method needs a session anymore.
+    it('serves every method without a dashboard session (dashboard auth removed)', async () => {
       const created = await create();
-      for (const [method, path, body] of [
-        ['GET', '/api/conversations', undefined],
-        ['GET', `/api/conversations/${created.id}`, undefined],
-        ['POST', '/api/conversations', {}],
-        ['PUT', `/api/conversations/${created.id}`, { title: 'x' }],
-        ['DELETE', `/api/conversations/${created.id}`, undefined],
+      for (const [method, path, body, expected] of [
+        ['GET', '/api/conversations', undefined, 200],
+        ['GET', `/api/conversations/${created.id}`, undefined, 200],
+        ['POST', '/api/conversations', {}, 201],
+        ['PUT', `/api/conversations/${created.id}`, { title: 'x' }, 200],
+        ['DELETE', `/api/conversations/${created.id}`, undefined, 200],
       ] as const) {
         const { status } = await request(app, method, path, { body });
-        expect(status, `${method} ${path} unauthenticated`).toBe(401);
+        expect(status, `${method} ${path} unauthenticated`).toBe(expected);
       }
-      // Still there: none of the unauthenticated calls took effect.
-      expect((await request(app, 'GET', `/api/conversations/${created.id}`, { token: dashToken })).status).toBe(200);
     });
 
-    it('the unified /v1 key does not open the conversations API', async () => {
+    it('the unified /v1 key opens the conversations API too (dashboard auth removed)', async () => {
       const { status } = await request(app, 'GET', '/api/conversations', { token: unifiedKey });
-      expect(status).toBe(401);
+      expect(status).toBe(200);
     });
   });
 });

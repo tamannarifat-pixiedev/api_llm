@@ -364,13 +364,12 @@ describe('server log viewer', () => {
 
   // ── Auth ───────────────────────────────────────────────────────────────────
 
-  it('requires a dashboard session, and the unified /v1 key does not open it', async () => {
+  it('serves logs without a dashboard session, unified /v1 key included (dashboard auth removed)', async () => {
     for (const path of ['/api/logs', '/api/logs/clear']) {
       const method = path.endsWith('clear') ? 'POST' : 'GET';
-      expect((await request(app, method, path)).status).toBe(401);
-      expect((await request(app, method, path, { key: unifiedKey })).status).toBe(401);
+      expect((await request(app, method, path)).status).toBe(200);
+      expect((await request(app, method, path, { key: unifiedKey })).status).toBe(200);
     }
-    expect((await request(app, 'GET', '/api/logs', { token: dashToken })).status).toBe(200);
   });
 
   // ── Retention ──────────────────────────────────────────────────────────────

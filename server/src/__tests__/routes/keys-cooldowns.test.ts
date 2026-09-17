@@ -103,7 +103,7 @@ describe('Key cooldown visibility and clearing', () => {
     expect(bad.status).toBe(400);
   });
 
-  it('requires dashboard auth', async () => {
+  it('clears cooldowns without dashboard auth (dashboard auth removed)', async () => {
     const id = await createKey(app, 'groq', 'gsk_testkeyvalue123456');
     const server = app.listen(0, '127.0.0.1');
     if (!server.listening) await new Promise<void>(resolve => server.once('listening', () => resolve()));
@@ -112,6 +112,6 @@ describe('Key cooldown visibility and clearing', () => {
       method: 'DELETE',
     });
     server.close();
-    expect(res.status).toBe(401);
+    expect(res.status).toBe(200);
   });
 });

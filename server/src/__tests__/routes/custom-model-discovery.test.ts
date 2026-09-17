@@ -78,10 +78,12 @@ describe('custom endpoint model discovery (#488)', () => {
     vi.restoreAllMocks();
   });
 
-  it('requires dashboard auth', async () => {
+  it('does not gate discovery behind dashboard auth (dashboard auth removed)', async () => {
     stubRelay({ data: [{ id: 'relay-a' }] });
     const { status } = await request(app, 'POST', DISCOVER, { baseUrl: ENDPOINT }, false);
-    expect(status).toBe(401);
+    // The request proceeds to the discovery logic (which may reject the stub's
+    // non-list payload on its own merits) instead of bouncing at the auth gate.
+    expect(status).not.toBe(401);
   });
 
   it('lists the endpoint models and flags the ones already registered', async () => {

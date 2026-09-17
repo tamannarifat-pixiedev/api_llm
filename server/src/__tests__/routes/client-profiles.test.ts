@@ -156,7 +156,10 @@ describe('client profiles (#411)', () => {
   });
 
   describe('security boundary', () => {
-    it('a profile key does NOT authenticate the admin/dashboard API', async () => {
+    // Dashboard auth was removed: /api/* treats every caller as the local
+    // operator, so profile/unified keys now reach it too. The /v1 side of the
+    // boundary (profile keys authenticate inference) is pinned elsewhere.
+    it('a profile key reaches the admin/dashboard API (dashboard auth removed)', async () => {
       const created = await createProfile('boundary-bot', 'x');
       for (const [method, path] of [
         ['GET', '/api/client-profiles'],
@@ -164,12 +167,12 @@ describe('client profiles (#411)', () => {
         ['GET', '/api/settings/api-key'],
       ] as const) {
         const { status } = await request(app, method, path, { token: created.key });
-        expect(status, `${method} ${path}`).toBe(401);
+        expect(status, `${method} ${path}`).toBe(200);
       }
     });
 
-    it('the unified key does not authenticate the admin API either (unchanged)', async () => {
-      expect((await request(app, 'GET', '/api/client-profiles', { token: unifiedKey })).status).toBe(401);
+    it('the unified key reaches the admin API too (dashboard auth removed)', async () => {
+      expect((await request(app, 'GET', '/api/client-profiles', { token: unifiedKey })).status).toBe(200);
     });
 
     it('a disabled profile key is rejected on inference like a bad key', async () => {

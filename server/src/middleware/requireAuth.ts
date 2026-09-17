@@ -1,18 +1,17 @@
 import type { Request, Response, NextFunction } from 'express';
-import { validateSession } from '../services/auth.js';
+import { validateSession, type SessionUser } from '../services/auth.js';
 
-// Gate the /api/* admin surface behind a dashboard session (#35, item #2).
-// The token is the opaque session token issued by /api/auth/login|setup, sent
-// as `Authorization: Bearer <token>`. The /v1 proxy is NOT gated by this — it
-// keeps its own unified-API-key auth for app clients.
-export function requireAuth(req: Request, res: Response, next: NextFunction): void {
+// Dashboard auth is disabled: the dashboard is a local, single-operator tool
+// that loads straight in — no account, no login, no first-run setup. Every
+// /api/* request is treated as the operator. A still-valid session token (the
+// desktop app mints a hidden account; tests mint their own) resolves to that
+// account so password re-verification endpoints (key reveal/export) keep
+// working; otherwise a fixed synthetic identity is attached. The /v1 proxy is
+// NOT affected — it keeps its own unified-API-key auth for app clients.
+export function requireAuth(req: Request, _res: Response, next: NextFunction): void {
   const token = req.headers.authorization?.replace(/^Bearer\s+/i, '')
     ?? (req.headers['x-dashboard-token'] as string | undefined);
-  const session = validateSession(token);
-  if (!session) {
-    res.status(401).json({ error: { message: 'Authentication required', type: 'authentication_error' } });
-    return;
-  }
-  (req as Request & { user?: typeof session }).user = session;
+  const session = token ? validateSession(token) : undefined;
+  (req as Request & { user?: SessionUser }).user = session ?? { userId: 0, email: 'local@localhost' };
   next();
 }

@@ -37,9 +37,9 @@ describe('GET /api/keys/providers — provider checklist (#543)', () => {
     dashToken = mintDashboardToken();
   });
 
-  it('requires dashboard auth', async () => {
+  it('serves the checklist without dashboard auth (dashboard auth removed)', async () => {
     const { status } = await request(app, '/api/keys/providers', false);
-    expect(status).toBe(401);
+    expect(status).toBe(200);
   });
 
   it('lists every registered provider as unconfigured before any key, excluding custom', async () => {

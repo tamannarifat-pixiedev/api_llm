@@ -13,8 +13,6 @@ import { loadConfig } from './lib/config.js';
 import { applyDeclarativeConfigFromEnv } from './services/declarative-config.js';
 import { restoreDbBackupIfNeeded, startDbBackupPump } from './lib/db-backup.js';
 import { startBackupScheduler } from './services/backups.js';
-import { userCount } from './services/auth.js';
-import { generateSetupCode } from './lib/setup-code.js';
 import { warnOnEnvDrift } from './lib/env-drift.js';
 import { warnOnRoutingOverrideDrift } from './services/model-weight-overrides.js';
 import { installLogRedaction } from './lib/log-redaction.js';
@@ -60,13 +58,6 @@ async function main() {
   const expiredCooldowns = cleanupExpiredCooldowns();
   if (expiredCooldowns > 0) {
     console.log(`[ratelimit] cleared ${expiredCooldowns} expired cooldown${expiredCooldowns === 1 ? '' : 's'}`);
-  }
-
-  // First-run hardening: when the dashboard is still unclaimed, mint a one-time
-  // setup code and log it. A loopback browser can finish setup without it; a
-  // remote caller must supply it (see routes/auth.ts). Regenerated each boot.
-  if (userCount() === 0) {
-    generateSetupCode();
   }
 
   // Load the persisted proxy settings from the DB (env var wins if set).

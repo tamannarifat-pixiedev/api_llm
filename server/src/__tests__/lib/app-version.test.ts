@@ -89,9 +89,10 @@ describe('GET /api/settings/version', () => {
     expect(body.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
-  it('requires auth — a build number is not for anonymous callers', async () => {
-    const { status } = await get({});
-    expect(status).toBe(401);
+  it('serves the version to anonymous callers (dashboard auth removed)', async () => {
+    const { status, body } = await get({});
+    expect(status).toBe(200);
+    expect(body.version).toMatch(/^\d+\.\d+\.\d+/);
   });
 
   it('does not collide with the Ollama emulation, which already owns /api/version', async () => {
